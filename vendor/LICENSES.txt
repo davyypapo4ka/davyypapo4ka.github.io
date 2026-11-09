@@ -1,2 +1,4 @@
 GSAP 3.12.5: Standard "No Charge" license, https://gsap.com/standard-license
 Ruslan Display, Neucha: SIL Open Font License 1.1, https://openfontlicense.org
+
+Chart.js 4.4.1 — MIT License, https://www.chartjs.org
