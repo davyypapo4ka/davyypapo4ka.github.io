@@ -125,6 +125,16 @@
   .plan.best::after { content:"Любимый тариф Змея"; position:absolute; top:-16px; left:50%; transform:translateX(-50%) rotate(-2deg); padding:3px 12px; background:var(--red); color:var(--paper); border:2.5px solid var(--ink); border-radius:999px; font-size:16px; white-space:nowrap; }
   .demo-tag { display:block; width:max-content; margin:28px auto 0; padding:6px 16px; background:var(--red); color:var(--paper); border:2.5px solid var(--ink); border-radius:10px; font-size:18px; }
 
+  /* Анонс карты */
+  .mapteaser { display:grid; grid-template-columns:1fr 1.15fr; gap:34px; align-items:center; }
+  .teaser-stats { display:flex; gap:14px; flex-wrap:wrap; }
+  .teaser-stats div { flex:1 1 150px; padding:10px 14px; background:var(--paper); border:3px solid var(--ink); border-radius:14px 5px 14px 5px; }
+  .teaser-stats b { display:block; font-family:'Ruslan Display',serif; font-weight:400; font-size:26px; color:var(--red); }
+  .teaser-stats span { font-size:16px; color:#4b3324; }
+  .mapthumb img { width:100%; border:3px solid var(--ink); border-radius:20px 6px 20px 6px; box-shadow:0 6px 0 rgba(43,26,18,.35); transition:transform .2s; }
+  .mapthumb:hover img { transform:rotate(-1deg) scale(1.02); }
+  @media (max-width: 820px) { .mapteaser { grid-template-columns:1fr; } }
+
   /* Партнёрство */
   .partner { display:grid; grid-template-columns:1.4fr 1fr; gap:24px; align-items:start; }
   .steps3 { display:grid; grid-template-columns:1fr; gap:16px; }
@@ -226,6 +236,7 @@
       <a href="#download">Загрузка</a>
       <a href="#plans">Тарифы</a>
       <a href="#partners">Партнёрство</a>
+      <a href="map/">🗺 Карта</a>
       <a href="#faq">Вопросы</a>
     </nav>
     <a class="btn small" href="https://t.me/navaibevpn_bot?start=site" target="_blank" rel="noopener">🤖 Бот</a>
@@ -384,6 +395,20 @@
     </div>
   </section>
 
+  <!-- Карта свободы -->
+  <section class="block alt" id="freedom">
+    <div class="wrap mapteaser">
+      <div>
+        <span class="kicker" style="text-align:left">Карта свободы</span>
+        <h2 class="title" style="text-align:left">Где Змей перекрыл Telegram</h2>
+        <p style="font-size:20px;color:#4b3324;margin-bottom:18px">Каждый час точки у настоящих провайдеров в городах России проверяют, открывается ли Telegram напрямую и дотягивается ли до нашего терема. Нажми на город — увидишь пинг и историю за двое суток.</p>
+        <div class="teaser-stats"><div><b id="t-tg">…</b><span>городов, где Telegram режут</span></div><div><b id="t-terem">…</b><span>где терем доступен</span></div></div>
+        <a class="btn" href="map/" style="margin-top:20px">🗺 Открыть карту</a>
+      </div>
+      <a href="map/" class="mapthumb" aria-label="Открыть карту"><img src="map/preview.png" alt="Карта России с городами" loading="lazy"></a>
+    </div>
+  </section>
+
   <!-- Партнёрство -->
   <section class="block" id="partners">
     <div class="wrap">
@@ -509,6 +534,14 @@ document.querySelectorAll('#menu a').forEach(a => a.onclick = () => $('#menu').c
     if (rel && rel.tag_name) $('#ver').textContent = 'версия ' + rel.tag_name.replace(/^v/, '');
   }).catch(() => {});
 })();
+
+// Цифры с карты свободы
+fetch('data/freedom.json?t=' + Math.floor(Date.now() / 300000)).then(r => r.ok ? r.json() : null).then(d => {
+  if (!d) return;
+  const cs = d.cities, n = cs.length;
+  $('#t-tg').textContent = `${cs.filter(c => !(c.tg_web.ok || c.tg_dc.ok)).length} из ${n}`;
+  $('#t-terem').textContent = d.terem_checked ? `${cs.filter(c => c.terem.ok).length} из ${n}` : '—';
+}).catch(() => {});
 
 // Калькулятор партнёрки: доля растёт с числом рефералов
 const PRICE = 149;   // месячный тариф одного реферала, ₽

@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Карта свободы — Навайбкодил ВПН</title>
+<meta name="description" content="Живая карта России: где Telegram открывается напрямую, а где только через терем Навайбкодил ВПН. Замеры с точек у реальных провайдеров каждый час.">
+<link rel="icon" type="image/png" href="../img/favicon.png">
+<link rel="stylesheet" href="../vendor/fonts.css">
+<style>
+  :root { --ink:#2B1A12; --paper:#F7E8C6; --paper2:#EBD39F; --red:#B7301F; --red2:#8E2115; --gold:#F4B63F; --gold2:#C98516; --green:#3E7C3A; --leaf:#7FBF5A; --sky:#6FB7C4; --muted:#7a5a3e;
+          --free:#6FB7C4; --saved:#7FBF5A; --slow:#F4B63F; --bad:#D9573F; --none:#D8C9A6; }
+  * { box-sizing:border-box; margin:0; }
+  body { font-family:'Neucha',cursive; color:var(--ink); background:#F3DDAF; font-size:18px; overflow-x:hidden; }
+  h1, h2, h3, .btn, .stat b { font-family:'Ruslan Display',serif; font-weight:400; }
+  .wrap { max-width:1240px; margin:0 auto; padding:0 16px; }
+  a { color:inherit; }
+
+  header { background:var(--red2); color:var(--paper); border-bottom:3px solid var(--ink); }
+  header .wrap { display:flex; align-items:center; gap:14px; min-height:62px; }
+  header a.back { text-decoration:none; font-size:18px; opacity:.9; }
+  header h1 { font-size:20px; margin-right:auto; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:11px 18px; border:3px solid var(--ink); border-radius:16px 5px 16px 5px; background:var(--gold); color:var(--ink); font-size:16px; box-shadow:0 5px 0 var(--ink); cursor:pointer; text-decoration:none; white-space:nowrap; }
+  .btn:active { transform:translateY(4px); box-shadow:0 1px 0 var(--ink); }
+  .btn:disabled { opacity:.6; cursor:wait; }
+  .btn.small { padding:7px 12px; font-size:14px; box-shadow:0 3px 0 var(--ink); }
+
+  .hero { padding:26px 0 8px; text-align:center; }
+  .hero h2 { font-size:clamp(28px,4.5vw,46px); color:var(--red); text-shadow:2px 2px 0 var(--paper); line-height:1; }
+  .hero p { max-width:760px; margin:10px auto 0; font-size:20px; color:#4b3324; }
+
+  .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:22px 0 18px; }
+  .stat { padding:12px 14px; background:var(--paper); border:3px solid var(--ink); border-radius:14px 5px 14px 5px; box-shadow:0 4px 0 rgba(43,26,18,.3); }
+  .stat b { display:block; font-size:24px; line-height:1.1; }
+  .stat span { font-size:16px; color:var(--muted); }
+  .stat.bad b { color:var(--red); } .stat.good b { color:var(--green); }
+
+  .board { display:grid; grid-template-columns:1fr 330px; gap:18px; align-items:start; }
+  .mapbox { position:relative; background:linear-gradient(180deg,#9fd0da,#cfe6e0); border:3px solid var(--ink); border-radius:20px 6px 20px 6px; box-shadow:0 6px 0 rgba(43,26,18,.3); overflow:hidden; }
+  .mapbox svg { display:block; width:100%; height:auto; }
+  .region { stroke:#2B1A12; stroke-width:.6; transition:fill .4s, opacity .2s; cursor:pointer; }
+  .region:hover { opacity:.82; }
+  .region.sel { stroke-width:1.8; }
+  .city { cursor:pointer; }
+  .city circle.dot { stroke:#2B1A12; stroke-width:1.4; transition:r .2s; }
+  .city:hover circle.dot, .city.sel circle.dot { r:7; }
+  .pulse { fill:none; stroke-width:2; animation:pulse 2.2s ease-out infinite; transform-box:fill-box; transform-origin:center; }
+  @keyframes pulse { from { opacity:.9; transform:scale(.6); } to { opacity:0; transform:scale(2.6); } }
+  .route { fill:none; stroke:var(--red); stroke-width:2.2; stroke-dasharray:6 6; animation:dash 1s linear infinite; }
+  @keyframes dash { to { stroke-dashoffset:-24; } }
+  .terem-label { font-family:'Ruslan Display',serif; font-size:13px; fill:var(--ink); }
+  #tip { position:absolute; pointer-events:none; padding:6px 10px; background:var(--ink); color:var(--paper); border-radius:8px; font-size:15px; white-space:nowrap; opacity:0; transition:opacity .15s; z-index:3; }
+  .legend { display:flex; flex-wrap:wrap; gap:8px 16px; padding:10px 14px; font-size:16px; background:rgba(247,232,198,.92); border-top:3px solid var(--ink); }
+  .legend i { display:inline-block; width:14px; height:14px; margin-right:6px; border:2px solid var(--ink); border-radius:4px; vertical-align:-2px; }
+
+  .side { display:grid; gap:14px; }
+  .card { padding:16px; background:var(--paper); border:3px solid var(--ink); border-radius:18px 6px 18px 6px; box-shadow:0 5px 0 rgba(43,26,18,.3); }
+  .card h3 { font-size:18px; color:var(--red); margin-bottom:8px; }
+  .row { display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1.5px dashed rgba(201,133,22,.55); font-size:17px; }
+  .row:last-child { border-bottom:0; }
+  .row b { font-weight:400; text-align:right; }
+  .ok { color:var(--green); } .no { color:var(--red); }
+  .muted { color:var(--muted); font-size:15px; }
+  .verdict { margin-top:10px; padding:8px 10px; border:2px solid var(--ink); border-radius:10px; font-size:17px; }
+  .spark { width:100%; height:46px; margin-top:6px; }
+  .list { max-height:360px; overflow:auto; }
+  .list .row { cursor:pointer; }
+  .list .row:hover { background:rgba(244,182,63,.25); }
+  .live-note { font-size:15px; color:var(--muted); margin-top:8px; }
+
+  .explain { margin:24px 0 40px; display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+  .explain .card p { font-size:17px; line-height:1.3; }
+  footer { padding:24px 0 40px; text-align:center; color:var(--muted); font-size:15px; }
+
+  /* Режим для картинки-анонса: только карта */
+  body.preview header, body.preview .hero, body.preview .stats, body.preview .side, body.preview .explain, body.preview footer, body.preview .legend { display:none; }
+  body.preview .board { display:block; }
+  body.preview main { padding:0; max-width:none; }
+  body.preview .mapbox { border-radius:0; border:0; box-shadow:none; }
+  @media (max-width: 980px) { .board { grid-template-columns:1fr; } .stats { grid-template-columns:repeat(2,1fr); } .explain { grid-template-columns:1fr; } }
+  @media (max-width: 520px) { header h1 { font-size:16px; } .stat b { font-size:20px; } .legend { font-size:14px; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <a class="back" href="../">← На сайт</a>
+    <h1>🗺 Карта свободы</h1>
+    <button class="btn small" id="live">⚡ Проверить сейчас</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h2>Где Змей перекрыл Telegram</h2>
+    <p>Каждый час точки у настоящих провайдеров в разных городах России проверяют: открывается ли Telegram напрямую и дотягивается ли до нашего терема в Амстердаме.</p>
+  </section>
+
+  <div class="stats">
+    <div class="stat bad"><b id="s-tg">—</b><span>городов, где Telegram режут</span></div>
+    <div class="stat good"><b id="s-terem">—</b><span>где наш терем доступен</span></div>
+    <div class="stat"><b id="s-ping">—</b><span>средний пинг до терема</span></div>
+    <div class="stat"><b id="s-upd">—</b><span id="s-upd-l">последний замер</span></div>
+  </div>
+
+  <div class="board">
+    <div class="mapbox" id="mapbox">
+      <svg id="map" role="img" aria-label="Карта регионов России"></svg>
+      <div id="tip"></div>
+      <div class="legend">
+        <span><i style="background:var(--saved)"></i>Telegram режут — терем спасает</span>
+        <span><i style="background:var(--slow)"></i>терем есть, но медленно</span>
+        <span><i style="background:var(--bad)"></i>терем недоступен</span>
+        <span><i style="background:var(--free)"></i>Telegram открывается сам</span>
+        <span><i style="background:var(--none)"></i>нет точки замера</span>
+      </div>
+    </div>
+
+    <aside class="side">
+      <div class="card" id="detail">
+        <h3>Выбери город</h3>
+        <p class="muted">Нажми на точку на карте или город в списке ниже — покажу, что там с Telegram и как работает терем.</p>
+      </div>
+      <div class="card">
+        <h3>Все города</h3>
+        <div class="list" id="list"></div>
+      </div>
+    </aside>
+  </div>
+
+  <section class="explain">
+    <div class="card"><h3>📡 Откуда данные</h3><p>Замеры делают точки сети Globalping — это обычные серверы и домашние подключения у российских провайдеров. Мы просим их открыть Telegram и достучаться до нашего терема.</p></div>
+    <div class="card"><h3>🧭 Как читать</h3><p>«Напрямую» — открывается ли сайт и сервер Telegram без VPN. «Через терем» — пинг от города до терема плюс путь от терема до Telegram.</p></div>
+    <div class="card"><h3>⚡ Живая проверка</h3><p>Кнопка «Проверить сейчас» прямо из твоего браузера спрашивает точки в России, открывается ли Telegram. Результат появится на карте через несколько секунд.</p></div>
+  </section>
+</main>
+<footer>Карта регионов: Natural Earth (public domain). Замеры: Globalping. Проект Навайбкодил ВПН для YouTube-видео.</footer>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const NS = 'http://www.w3.org/2000/svg';
+const el = (name, attrs = {}, parent) => { const e = document.createElementNS(NS, name); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; };
+const RU = { 'Moscow': 'Москва', 'Saint Petersburg': 'Санкт-Петербург', 'Novosibirsk': 'Новосибирск', 'Yekaterinburg': 'Екатеринбург', 'Kazan': 'Казань', 'Samara': 'Самара', 'Krasnodar': 'Краснодар', 'Vladivostok': 'Владивосток', 'Khabarovsk': 'Хабаровск', 'Irkutsk': 'Иркутск', 'Omsk': 'Омск', 'Ufa': 'Уфа', 'Tomsk': 'Томск', 'Tula': 'Тула', 'Kursk': 'Курск', 'Penza': 'Пенза', 'Tambov': 'Тамбов', 'Taganrog': 'Таганрог', 'Orenburg': 'Оренбург', 'Kostroma': 'Кострома', 'Obninsk': 'Обнинск', 'Mytishchi': 'Мытищи', 'Naberezhnyye Chelny': 'Набережные Челны', 'Yuzhno-Sakhalinsk': 'Южно-Сахалинск', "Mar'ino": 'Марьино', 'Nizhny Novgorod': 'Нижний Новгород', 'Rostov-on-Don': 'Ростов-на-Дону', 'Chelyabinsk': 'Челябинск', 'Voronezh': 'Воронеж', 'Perm': 'Пермь', 'Volgograd': 'Волгоград', 'Krasnoyarsk': 'Красноярск', 'Saratov': 'Саратов', 'Tyumen': 'Тюмень', 'Barnaul': 'Барнаул', 'Kaliningrad': 'Калининград', 'Sochi': 'Сочи', 'Murmansk': 'Мурманск', 'Yaroslavl': 'Ярославль', 'Izhevsk': 'Ижевск', 'Ulyanovsk': 'Ульяновск', 'Tver': 'Тверь', 'Kemerovo': 'Кемерово', 'Novokuznetsk': 'Новокузнецк', 'Ryazan': 'Рязань', 'Lipetsk': 'Липецк', 'Cheboksary': 'Чебоксары', 'Kaluga': 'Калуга', 'Smolensk': 'Смоленск', 'Belgorod': 'Белгород', 'Bryansk': 'Брянск', 'Vologda': 'Вологда', 'Arkhangelsk': 'Архангельск', 'Petrozavodsk': 'Петрозаводск', 'Surgut': 'Сургут', 'Yakutsk': 'Якутск', 'Chita': 'Чита', 'Ulan-Ude': 'Улан-Удэ', 'Petropavlovsk-Kamchatsky': 'Петропавловск-Камчатский', 'Magadan': 'Магадан', 'Stavropol': 'Ставрополь', 'Makhachkala': 'Махачкала', 'Astrakhan': 'Астрахань', 'Kirov': 'Киров', 'Vladimir': 'Владимир', 'Ivanovo': 'Иваново', 'Orel': 'Орёл', 'Pskov': 'Псков', 'Veliky Novgorod': 'Великий Новгород', 'Syktyvkar': 'Сыктывкар', 'Kurgan': 'Курган', 'Tolyatti': 'Тольятти', 'Novorossiysk': 'Новороссийск', 'Simferopol': 'Симферополь', 'Sevastopol': 'Севастополь' };
+const ru = (c) => RU[c] || c;
+const COLORS = { free: 'var(--free)', saved: 'var(--saved)', slow: 'var(--slow)', bad: 'var(--bad)', none: 'var(--none)' };
+
+let MAP = null, DATA = null, P = null, selected = null;
+
+// Та же проекция Альберса, что в site/tools/make_map.py
+function project(lon, lat) {
+  const r = Math.PI / 180, p = P;
+  const n = (Math.sin(p.phi1 * r) + Math.sin(p.phi2 * r)) / 2;
+  const C = Math.cos(p.phi1 * r) ** 2 + 2 * n * Math.sin(p.phi1 * r);
+  const rho0 = Math.sqrt(C - 2 * n * Math.sin(p.lat0 * r)) / n;
+  if (lon < 0) lon += 360;
+  const rho = Math.sqrt(C - 2 * n * Math.sin(lat * r)) / n, th = n * (lon - p.lon0) * r;
+  const x = rho * Math.sin(th), y = rho0 - rho * Math.cos(th);
+  return [(x - p.minx) * p.k, (p.maxy - y) * p.k];
+}
+
+// Итог по городу
+function status(c) {
+  const tgDirect = c.tg_web.ok || c.tg_dc.ok;
+  if (tgDirect) return 'free';
+  if (c.terem.ok === null || c.terem.ok === undefined) return 'saved';
+  if (!c.terem.ok) return 'bad';
+  return c.terem.ms > 150 ? 'slow' : 'saved';
+}
+const VERDICT = {
+  free: ['🟦 Telegram здесь открывается сам. Змей сегодня спит.', 'var(--free)'],
+  saved: ['🟩 Напрямую Telegram не открывается, а через наш терем — да. Вайбатырь спасает!', 'var(--saved)'],
+  slow: ['🟨 Telegram режут, терем доступен, но путь долгий.', 'var(--slow)'],
+  bad: ['🟥 Отсюда не достучаться и до терема. Змей силён.', 'var(--bad)'],
+};
+
+function drawMap() {
+  const svg = $('#map');
+  svg.setAttribute('viewBox', `-40 -10 ${MAP.w + 50} ${MAP.h + 20}`);
+  const g = el('g', { id: 'regions' }, svg);
+  MAP.regions.forEach(r => { const p = el('path', { d: r.d, class: 'region', fill: COLORS.none }, g); p.dataset.name = r.name; });
+  // Терем — за левым краем карты (Амстердам западнее)
+  const t = el('g', { id: 'terem', transform: 'translate(-20 205)' }, svg);
+  el('circle', { r: 11, fill: 'var(--gold)', stroke: '#2B1A12', 'stroke-width': 2 }, t);
+  el('text', { 'text-anchor': 'middle', y: 5, 'font-size': 13 }, t).textContent = '🏰';
+  const lab = el('text', { class: 'terem-label', x: -6, y: -18 }, t); lab.textContent = 'Терем';
+  el('g', { id: 'routes' }, svg);
+  el('g', { id: 'cities' }, svg);
+  svg.addEventListener('mousemove', moveTip);
+  svg.addEventListener('mouseleave', () => $('#tip').style.opacity = 0);
+  $$('.region').forEach(p => p.addEventListener('mouseenter', () => showTip(p.dataset.name + (p.dataset.city ? ' · ' + p.dataset.city : ''))));
+}
+const $$ = (s) => [...document.querySelectorAll(s)];
+
+function showTip(text) { const t = $('#tip'); t.textContent = text; t.style.opacity = 1; }
+function moveTip(e) {
+  const box = $('#mapbox').getBoundingClientRect(), t = $('#tip');
+  t.style.left = Math.min(e.clientX - box.left + 14, box.width - t.offsetWidth - 6) + 'px';
+  t.style.top = (e.clientY - box.top + 14) + 'px';
+}
+
+function render() {
+  const cities = DATA.cities.filter(c => c.lat != null && c.lon != null);
+  // Регионы: красим по городам внутри (хуже всего — главнее)
+  const rank = { bad: 4, slow: 3, saved: 2, free: 1 };
+  const regionState = new Map();
+  const paths = $$('.region');
+  cities.forEach(c => {
+    const [x, y] = project(c.lon, c.lat);
+    c._xy = [x, y]; c._st = status(c);
+    const pt = new DOMPoint(x, y);
+    const reg = paths.find(p => p.isPointInFill(pt));
+    c._region = reg ? reg.dataset.name : null;
+    if (reg) {
+      const cur = regionState.get(reg);
+      if (!cur || rank[c._st] > rank[cur.st]) regionState.set(reg, { st: c._st, city: ru(c.city) });
+    }
+  });
+  paths.forEach(p => {
+    const s = regionState.get(p);
+    p.setAttribute('fill', s ? COLORS[s.st] : COLORS.none);
+    p.dataset.city = s ? s.city : '';
+  });
+
+  // Точки городов
+  const g = $('#cities'); g.replaceChildren();
+  cities.forEach(c => {
+    const cg = el('g', { class: 'city', transform: `translate(${c._xy[0].toFixed(1)} ${c._xy[1].toFixed(1)})` }, g);
+    el('circle', { class: 'pulse', r: 6, stroke: COLORS[c._st] }, cg);
+    el('circle', { class: 'dot', r: 5, fill: COLORS[c._st] }, cg);
+    cg.addEventListener('mouseenter', () => showTip(`${ru(c.city)} · ${c._st === 'free' ? 'Telegram открыт' : 'Telegram режут'}${c.terem.ms ? ' · терем ' + c.terem.ms + ' мс' : ''}`));
+    cg.addEventListener('click', () => select(c));
+    c._g = cg;
+  });
+
+  // Цифры
+  const total = cities.length;
+  const blocked = cities.filter(c => c._st !== 'free').length;
+  const teremOk = cities.filter(c => c.terem.ok).length;
+  const pings = cities.map(c => c.terem.ms).filter(Boolean);
+  $('#s-tg').textContent = `${blocked} из ${total}`;
+  $('#s-terem').textContent = DATA.terem_checked ? `${teremOk} из ${total}` : '—';
+  $('#s-ping').textContent = pings.length ? Math.round(pings.reduce((a, b) => a + b, 0) / pings.length) + ' мс' : '—';
+  const mins = Math.round((Date.now() / 1000 - DATA.updated) / 60);
+  $('#s-upd').textContent = mins < 1 ? 'только что' : mins < 60 ? `${mins} мин назад` : `${Math.round(mins / 60)} ч назад`;
+
+  // Список
+  const list = $('#list'); list.replaceChildren();
+  [...cities].sort((a, b) => ru(a.city).localeCompare(ru(b.city), 'ru')).forEach(c => {
+    const row = document.createElement('div'); row.className = 'row';
+    row.innerHTML = '<span></span><b></b>';
+    row.children[0].textContent = ru(c.city);
+    row.children[1].textContent = (c._st === 'free' ? '🟦 открыт' : '🚫 режут') + (c.terem.ms ? ` · 🏰 ${c.terem.ms} мс` : '');
+    row.onclick = () => select(c);
+    list.appendChild(row);
+  });
+  if (selected) { const again = cities.find(c => c.city === selected.city && c.asn === selected.asn); if (again) select(again, true); }
+}
+
+function select(c, quiet) {
+  selected = c;
+  $$('.city').forEach(x => x.classList.remove('sel'));
+  $$('.region').forEach(x => x.classList.toggle('sel', x.dataset.name === c._region));
+  c._g.classList.add('sel');
+  // Маршрут «город → терем»
+  const routes = $('#routes'); routes.replaceChildren();
+  if (c.terem.ok) {
+    const [x, y] = c._xy, tx = -20, ty = 205;
+    el('path', { class: 'route', d: `M${x},${y} Q${(x + tx) / 2},${Math.min(y, ty) - 90} ${tx},${ty}` }, routes);
+  }
+  const yes = (o, extra = '') => o.ok ? `<span class="ok">✅ ${o.ms != null ? o.ms + ' мс' : 'да'}${extra}</span>` : '<span class="no">❌ нет</span>';
+  const d = $('#detail');
+  const [text, color] = VERDICT[c._st];
+  d.innerHTML = `<h3></h3><p class="muted"></p>
+    <div class="row"><span>Сайт Telegram напрямую</span><b>${yes(c.tg_web)}</b></div>
+    <div class="row"><span>Сервер Telegram напрямую</span><b>${yes(c.tg_dc)}</b></div>
+    ${DATA.terem_checked ? `<div class="row"><span>Наш терем</span><b>${c.terem.ok === null ? '—' : yes(c.terem)}</b></div>` : ''}
+    ${c.via_ms ? `<div class="row"><span>Telegram через терем</span><b class="ok">≈ ${c.via_ms} мс</b></div>` : ''}
+    <div class="row"><span>Обычный интернет</span><b>${c.base.ok ? c.base.ms + ' мс' : '—'}</b></div>
+    <div class="verdict" style="background:${color}"></div>
+    <div class="muted" style="margin-top:10px">Последние 48 часов: Telegram напрямую</div>
+    <svg class="spark" viewBox="0 0 240 46" preserveAspectRatio="none"></svg>`;
+  d.querySelector('h3').textContent = ru(c.city);
+  d.querySelector('p.muted').textContent = 'Провайдер: ' + (c.network || '—') + (c._region ? ' · ' + c._region : '');
+  d.querySelector('.verdict').textContent = text;
+  spark(d.querySelector('.spark'), c);
+  if (!quiet && innerWidth < 980) d.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// История: зелёный столбик — Telegram открывался, красный — нет; линия — пинг до терема
+function spark(svg, c) {
+  const h = (DATA.history || []).map(s => s.c[c.city]).filter(Boolean);
+  if (!h.length) { el('text', { x: 4, y: 28, 'font-size': 14, fill: '#7a5a3e' }, svg).textContent = 'история появится через пару часов'; return; }
+  const w = 240 / h.length;
+  h.forEach(([ok], i) => el('rect', { x: i * w + .5, y: 30, width: Math.max(1, w - 1), height: 14, rx: 2, fill: ok ? 'var(--saved)' : 'var(--bad)' }, svg));
+  const ms = h.map(x => x[1]).filter(v => v != null);
+  if (ms.length > 1) {
+    const max = Math.max(...ms), min = Math.min(...ms);
+    const pts = h.map((x, i) => x[1] == null ? null : `${(i * w + w / 2).toFixed(1)},${(26 - 22 * (x[1] - min) / ((max - min) || 1)).toFixed(1)}`).filter(Boolean);
+    el('polyline', { points: pts.join(' '), fill: 'none', stroke: '#B7301F', 'stroke-width': 2 }, svg);
+  }
+}
+
+// ---------- Живая проверка из браузера посетителя ----------
+const GP = 'https://api.globalping.io/v1/measurements';
+async function measure(body) {
+  const r = await fetch(GP, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  if (r.status === 429) throw new Error('Лимит проверок на сейчас исчерпан, попробуй через час');
+  if (!r.ok) throw new Error('Сервис проверок не ответил');
+  const { id } = await r.json();
+  for (let i = 0; i < 60; i++) {
+    await new Promise(res => setTimeout(res, 800));
+    const d = await (await fetch(`${GP}/${id}`)).json();
+    if (d.status !== 'in-progress') return d;
+  }
+  throw new Error('Проверка не успела');
+}
+$('#live').onclick = async () => {
+  const btn = $('#live');
+  btn.disabled = true; btn.textContent = '⏳ Проверяю…';
+  try {
+    const cities = DATA ? [...new Set(DATA.cities.map(c => c.city))].slice(0, 12) : ['Moscow', 'Saint Petersburg', 'Novosibirsk', 'Yekaterinburg', 'Kazan'];
+    const locs = cities.map(city => ({ country: 'RU', city, limit: 1 }));
+    const web = await measure({ type: 'http', target: 'web.telegram.org', locations: locs, measurementOptions: { request: { method: 'HEAD', path: '/' }, protocol: 'HTTPS' } });
+    const dc = await measure({ type: 'ping', target: '149.154.167.51', locations: web.id, measurementOptions: { packets: 2, protocol: 'TCP', port: 443 } });
+    let changed = 0;
+    web.results.forEach((w, i) => {
+      const c = DATA && DATA.cities.find(x => x.city === w.probe.city);
+      if (!c) return;
+      c.tg_web = { ok: w.result.status === 'finished' && !!w.result.statusCode, ms: w.result.timings ? w.result.timings.total : null };
+      const st = dc.results[i].result.stats || {};
+      c.tg_dc = { ok: st.avg != null && st.loss < 100, ms: st.avg != null ? Math.round(st.avg) : null };
+      changed++;
+    });
+    if (DATA) { DATA.updated = Math.floor(Date.now() / 1000); render(); }
+    btn.textContent = `✅ Обновлено ${changed} городов`;
+  } catch (e) { btn.textContent = '⚠️ ' + e.message; }
+  setTimeout(() => { btn.disabled = false; btn.textContent = '⚡ Проверить сейчас'; }, 6000);
+};
+
+// ---------- Старт ----------
+(async () => {
+  if (new URLSearchParams(location.search).has('preview')) document.body.classList.add('preview');
+  MAP = await (await fetch('regions.json')).json();
+  P = MAP.proj;
+  drawMap();
+  const src = new URLSearchParams(location.search).get('data') || '../data/freedom.json';
+  try {
+    const r = await fetch(src + '?t=' + Math.floor(Date.now() / 300000), { cache: 'no-store' });
+    if (!r.ok) throw new Error();
+    DATA = await r.json();
+    render();
+  } catch (e) {
+    $('#s-upd').textContent = 'скоро';
+    $('#s-upd-l').textContent = 'первые замеры появятся в течение часа';
+  }
+})();
+</script>
+</body>
+</html>
