@@ -536,7 +536,7 @@ document.querySelectorAll('#menu a').forEach(a => a.onclick = () => $('#menu').c
 })();
 
 // Цифры с карты свободы
-fetch(`https://${location.hostname.endsWith('.github.io') ? location.hostname.split('.')[0] : 'davyypapo4ka'}.github.io/navaibe-data/freedom.json?t=` + Math.floor(Date.now() / 300000)).then(r => r.ok ? r.json() : null).then(d => {
+fetch(`https://raw.githubusercontent.com/${location.hostname.endsWith('.github.io') ? location.hostname.split('.')[0] : 'davyypapo4ka'}/navaibe-data/main/freedom.json?t=` + Math.floor(Date.now() / 300000)).then(r => r.ok ? r.json() : null).then(d => {
   if (!d) return;
   const cs = d.cities, n = cs.length;
   $('#t-tg').textContent = `${cs.filter(c => !(c.tg_web.ok || c.tg_dc.ok)).length} из ${n}`;
