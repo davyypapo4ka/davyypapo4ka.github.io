@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Навайбкодил ВПН — сказочный клиент на ядре Xray</title>
+<meta name="description" content="Навайбкодил ВПН — клиент для Mac на ядре Xray: одна кнопка, VLESS + Reality, Mux, весь трафик через TUN и сказочный дизайн. Проект из YouTube-видео.">
+<meta property="og:title" content="Навайбкодил ВПН">
+<meta property="og:description" content="Сказочный клиент на ядре Xray: Вайбатырь против Змея Блокирыча.">
+<meta property="og:image" content="img/shot-night.png">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="stylesheet" href="vendor/fonts.css">
+<style>
+  :root {
+    --ink:#2B1A12; --paper:#F7E8C6; --paper2:#EBD39F; --red:#B7301F; --red2:#8E2115;
+    --gold:#F4B63F; --gold2:#C98516; --green:#3E7C3A; --leaf:#5D9440; --sky:#6FB7C4; --muted:#7a5a3e;
+    --wrap:1120px;
+  }
+  * { box-sizing:border-box; margin:0; }
+  html { scroll-behavior:smooth; scroll-padding-top:80px; }
+  body { font-family:'Neucha',cursive; color:var(--ink); background:#F3DDAF; font-size:19px; line-height:1.35; overflow-x:hidden; }
+  a { color:inherit; }
+  img { max-width:100%; display:block; }
+  .wrap { max-width:var(--wrap); margin:0 auto; padding:0 20px; }
+  h1, h2, h3, .logo b, .btn { font-family:'Ruslan Display',serif; font-weight:400; }
+
+  /* ---------- Шапка ---------- */
+  header { position:sticky; top:0; z-index:20; background:rgba(142,33,21,.96); border-bottom:3px solid var(--ink); backdrop-filter:blur(6px); }
+  header .wrap { display:flex; align-items:center; gap:18px; height:66px; }
+  .logo { display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--paper); }
+  .logo img { width:42px; height:42px; }
+  .logo b { font-size:19px; line-height:1; }
+  nav.top { display:flex; gap:4px; margin-left:auto; }
+  nav.top a { padding:7px 11px; border-radius:10px; color:var(--paper); text-decoration:none; font-size:18px; }
+  nav.top a:hover { background:rgba(244,182,63,.25); }
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:13px 22px; border:3px solid var(--ink); border-radius:18px 6px 18px 6px; background:var(--gold); color:var(--ink); font-size:19px; line-height:1.05; text-decoration:none; box-shadow:0 6px 0 var(--ink); cursor:pointer; transition:transform .08s, box-shadow .08s, filter .15s; }
+  .btn:hover { filter:brightness(1.06); }
+  .btn:active { transform:translateY(5px); box-shadow:0 1px 0 var(--ink); }
+  .btn.red { background:var(--red); color:var(--paper); }
+  .btn.paper { background:var(--paper); }
+  .btn.small { padding:9px 14px; font-size:15px; box-shadow:0 4px 0 var(--ink); }
+  #burger { display:none; margin-left:auto; width:44px; height:44px; border:2.5px solid var(--ink); border-radius:10px; background:var(--gold); font-size:22px; cursor:pointer; }
+
+  /* ---------- Главный экран ---------- */
+  .hero { position:relative; overflow:hidden; background:linear-gradient(180deg,#6FB7C4 0%,#FBD9A4 62%,#F7A95F 100%); border-bottom:3px solid var(--ink); }
+  .hero .wrap { position:relative; z-index:2; display:grid; grid-template-columns:1.1fr .9fr; gap:40px; align-items:center; padding-top:56px; padding-bottom:110px; }
+  .badge { display:inline-block; padding:6px 14px; background:var(--paper); border:2.5px solid var(--ink); border-radius:999px; font-size:17px; box-shadow:0 3px 0 rgba(43,26,18,.3); }
+  .hero h1 { margin:18px 0 14px; font-size:clamp(40px,6.4vw,78px); line-height:.95; color:var(--red); text-shadow:3px 3px 0 var(--paper),-1px -1px 0 var(--paper),6px 7px 0 rgba(43,26,18,.25); }
+  .hero p.lead { font-size:23px; max-width:560px; }
+  .hero .cta { display:flex; flex-wrap:wrap; gap:16px; margin-top:26px; }
+  .hero .mini { margin-top:22px; font-size:17px; color:#4b3324; }
+  .sun { position:absolute; left:4%; top:40px; width:110px; height:110px; z-index:1; }
+  .sun .rays { transform-origin:55px 55px; animation:spin 40s linear infinite; }
+  .cloud { position:absolute; z-index:1; animation:float 14s ease-in-out infinite alternate; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @keyframes float { to { transform:translateX(46px); } }
+  .hills { position:absolute; left:0; right:0; bottom:-2px; z-index:1; width:100%; height:150px; }
+
+  /* Окно Mac с живым демо */
+  .window { position:relative; width:100%; max-width:400px; margin-left:auto; border:3px solid var(--ink); border-radius:16px; overflow:hidden; background:#23150E; box-shadow:0 10px 0 rgba(43,26,18,.35), 0 30px 60px rgba(43,26,18,.25); transform:rotate(1.5deg); }
+  .window .bar { display:flex; align-items:center; gap:7px; height:30px; padding:0 12px; background:#E9D5AA; border-bottom:2.5px solid var(--ink); font-size:15px; }
+  .window .bar i { width:12px; height:12px; border-radius:50%; border:1.5px solid rgba(0,0,0,.35); }
+  .window .bar span { margin-left:auto; margin-right:auto; transform:translateX(-24px); }
+  .window iframe { display:block; width:100%; height:700px; border:0; }
+  .demo-note { margin-top:16px; text-align:right; font-size:16px; color:#4b3324; }
+
+  /* ---------- Разделы ---------- */
+  section.block { padding:84px 0; }
+  section.alt { background:var(--paper2); border-top:3px solid var(--ink); border-bottom:3px solid var(--ink); }
+  .kicker { display:block; text-align:center; font-size:19px; color:var(--red); }
+  h2.title { text-align:center; font-size:clamp(30px,4.2vw,48px); line-height:1.02; color:var(--ink); margin:6px 0 12px; }
+  p.intro { text-align:center; max-width:720px; margin:0 auto 44px; font-size:21px; color:#4b3324; }
+
+  .card { position:relative; padding:22px; background:var(--paper); border:3px solid var(--ink); border-radius:22px 8px 22px 8px; box-shadow:0 6px 0 rgba(43,26,18,.35); outline:2px dashed var(--gold2); outline-offset:-10px; }
+  .features { display:grid; grid-template-columns:repeat(4,1fr); gap:20px; }
+  .features .ic { width:58px; height:58px; display:grid; place-items:center; margin-bottom:12px; font-size:28px; background:var(--gold); border:3px solid var(--ink); border-radius:50%; }
+  .features h3 { font-size:19px; line-height:1.1; margin-bottom:8px; color:var(--red); }
+  .features p { font-size:18px; line-height:1.25; }
+
+  /* О клиенте */
+  .shots { display:grid; grid-template-columns:repeat(4,1fr); gap:22px; align-items:start; }
+  .shot { text-align:center; }
+  .shot img { width:100%; border:3px solid var(--ink); border-radius:16px; box-shadow:0 6px 0 rgba(43,26,18,.35); background:var(--sky); }
+  .shot:nth-child(odd) img { transform:rotate(-1.5deg); }
+  .shot:nth-child(even) img { transform:rotate(1.5deg); margin-top:26px; }
+  .shot b { display:block; margin-top:14px; font-family:'Ruslan Display',serif; font-weight:400; font-size:18px; color:var(--red); }
+  .shot span { font-size:17px; color:#4b3324; }
+
+  .flow { display:flex; align-items:stretch; justify-content:center; flex-wrap:wrap; gap:10px; margin-top:60px; }
+  .flow .step { flex:1 1 140px; max-width:190px; padding:14px 12px; text-align:center; background:var(--paper); border:3px solid var(--ink); border-radius:16px 5px 16px 5px; box-shadow:0 5px 0 rgba(43,26,18,.3); }
+  .flow .step div { font-size:32px; }
+  .flow .step b { display:block; font-family:'Ruslan Display',serif; font-weight:400; font-size:16px; margin:4px 0; }
+  .flow .step small { font-size:16px; color:#4b3324; line-height:1.2; display:block; }
+  .flow .arrow { align-self:center; font-size:28px; color:var(--red); }
+
+  /* Загрузка */
+  .platforms { display:grid; grid-template-columns:1.25fr 1fr; gap:24px; }
+  .mac h3 { font-size:28px; color:var(--red); margin-bottom:6px; }
+  .mac ol { margin:16px 0 0; padding-left:0; list-style:none; counter-reset:s; }
+  .mac li { position:relative; padding:4px 0 12px 48px; counter-increment:s; font-size:18px; line-height:1.25; }
+  .mac li::before { content:counter(s); position:absolute; left:0; top:0; width:36px; height:36px; display:grid; place-items:center; background:var(--red); color:var(--paper); border:2px solid var(--ink); border-radius:50%; font-family:'Ruslan Display',serif; font-size:18px; }
+  .mac .reqs { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 18px; }
+  .chip { padding:3px 11px; background:var(--paper2); border:2px solid var(--ink); border-radius:999px; font-size:16px; }
+  .soon { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .soon .card { padding:16px; text-align:center; opacity:.8; }
+  .soon .card div { font-size:34px; }
+  .soon .card b { display:block; font-family:'Ruslan Display',serif; font-weight:400; font-size:17px; margin:4px 0; }
+  .soon .card span { font-size:16px; }
+
+  /* Тарифы */
+  .plans { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; max-width:960px; margin:0 auto; }
+  .plan { text-align:center; }
+  .plan h3 { font-size:22px; color:var(--red); }
+  .plan .price { margin:14px 0 4px; font-family:'Ruslan Display',serif; font-size:44px; }
+  .plan ul { list-style:none; padding:0; margin:16px 0 20px; font-size:18px; }
+  .plan li { padding:4px 0; border-bottom:2px dashed rgba(201,133,22,.5); }
+  .plan.best { background:var(--gold); transform:translateY(-10px); }
+  .plan.best::after { content:"Любимый тариф Змея"; position:absolute; top:-16px; left:50%; transform:translateX(-50%) rotate(-2deg); padding:3px 12px; background:var(--red); color:var(--paper); border:2.5px solid var(--ink); border-radius:999px; font-size:16px; white-space:nowrap; }
+  .demo-tag { display:block; width:max-content; margin:28px auto 0; padding:6px 16px; background:var(--red); color:var(--paper); border:2.5px solid var(--ink); border-radius:10px; font-size:18px; }
+
+  /* Отзывы */
+  .reviews { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+  .review .who { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+  .review .ava { width:54px; height:54px; display:grid; place-items:center; font-size:30px; background:var(--paper2); border:3px solid var(--ink); border-radius:50%; }
+  .review .who b { display:block; font-family:'Ruslan Display',serif; font-weight:400; font-size:17px; }
+  .review .stars { color:var(--gold2); font-size:18px; letter-spacing:2px; }
+  .review p { font-size:18px; }
+
+  /* Вопросы */
+  .faq { max-width:820px; margin:0 auto; }
+  details { margin-bottom:14px; background:var(--paper); border:3px solid var(--ink); border-radius:16px 5px 16px 5px; box-shadow:0 5px 0 rgba(43,26,18,.3); }
+  summary { list-style:none; display:flex; justify-content:space-between; gap:14px; padding:16px 20px; font-size:21px; cursor:pointer; }
+  summary::-webkit-details-marker { display:none; }
+  summary::after { content:"＋"; font-size:24px; color:var(--red); transition:transform .2s; }
+  details[open] summary::after { transform:rotate(45deg); }
+  details p { padding:0 20px 18px; font-size:18px; color:#3d2a1e; }
+
+  /* Подвал */
+  footer { background:var(--red2); color:var(--paper); border-top:3px solid var(--ink); padding:48px 0 36px; }
+  footer .wrap { display:grid; grid-template-columns:1.4fr 1fr 1fr; gap:30px; }
+  footer h4 { font-family:'Ruslan Display',serif; font-weight:400; font-size:17px; margin-bottom:10px; color:var(--gold); }
+  footer a { display:block; margin:4px 0; text-decoration:none; opacity:.9; }
+  footer a:hover { opacity:1; text-decoration:underline; }
+  footer p { font-size:16px; opacity:.85; }
+  .legal { grid-column:1 / -1; padding-top:22px; border-top:2px dashed rgba(244,182,63,.5); font-size:15px; opacity:.8; }
+
+  #toast { position:fixed; left:50%; bottom:24px; transform:translateX(-50%); max-width:calc(100% - 32px); padding:12px 18px; background:var(--ink); color:var(--paper); border-radius:12px; font-size:18px; opacity:0; pointer-events:none; transition:opacity .25s; z-index:50; }
+
+  .reveal { opacity:0; transform:translateY(24px); transition:opacity .6s, transform .6s; }
+  .reveal.in { opacity:1; transform:none; }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity:1; transform:none; } .sun .rays, .cloud { animation:none; } }
+
+  /* ---------- Телефон ---------- */
+  @media (max-width: 980px) {
+    .features { grid-template-columns:repeat(2,1fr); }
+    .shots { grid-template-columns:repeat(2,1fr); }
+    .platforms { grid-template-columns:1fr; }
+    .reviews { grid-template-columns:1fr; }
+  }
+  @media (max-width: 820px) {
+    nav.top { display:none; position:absolute; top:66px; left:0; right:0; flex-direction:column; padding:10px 16px 16px; background:var(--red2); border-bottom:3px solid var(--ink); }
+    nav.top.open { display:flex; }
+    #burger { display:block; }
+    header .btn { display:none; }
+    .hero .wrap { grid-template-columns:1fr; padding-top:36px; gap:34px; }
+    .window { margin:0 auto; transform:none; }
+    .window iframe { height:640px; }
+    .demo-note { text-align:center; }
+    .plans { grid-template-columns:1fr; max-width:420px; }
+    .plan.best { transform:none; margin-top:12px; }
+    footer .wrap { grid-template-columns:1fr; }
+    .sun { width:80px; height:80px; }
+    .badge { position:relative; z-index:3; }
+  }
+  @media (max-width: 520px) {
+    .sun { display:none; }
+    body { font-size:18px; }
+    .features, .shots, .soon { grid-template-columns:1fr; }
+    .shot:nth-child(even) img { margin-top:0; }
+    .hero p.lead { font-size:20px; }
+    .btn { width:100%; }
+    section.block { padding:60px 0; }
+    .flow .arrow { transform:rotate(90deg); flex-basis:100%; text-align:center; }
+    .flow .step { max-width:none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="logo" href="#top"><img src="img/icon.png" alt=""><b>Навайбкодил<br>ВПН</b></a>
+    <nav class="top" id="menu">
+      <a href="#features">Преимущества</a>
+      <a href="#client">О клиенте</a>
+      <a href="#download">Загрузка</a>
+      <a href="#plans">Тарифы</a>
+      <a href="#faq">Вопросы</a>
+    </nav>
+    <a class="btn small" href="https://t.me/navaibevpn_bot?start=site" target="_blank" rel="noopener">🤖 Бот</a>
+    <button id="burger" aria-label="Меню" aria-expanded="false">☰</button>
+  </div>
+</header>
+
+<main id="top">
+  <!-- Главный экран -->
+  <section class="hero">
+    <svg class="sun" viewBox="0 0 110 110" aria-hidden="true">
+      <g class="rays"><g transform="translate(55 55)" fill="#F4B63F" stroke="#2B1A12" stroke-width="2.5">
+        <path d="M-7-40L0-55 7-40z"/><path d="M-7-40L0-55 7-40z" transform="rotate(30)"/><path d="M-7-40L0-55 7-40z" transform="rotate(60)"/><path d="M-7-40L0-55 7-40z" transform="rotate(90)"/>
+        <path d="M-7-40L0-55 7-40z" transform="rotate(120)"/><path d="M-7-40L0-55 7-40z" transform="rotate(150)"/><path d="M-7-40L0-55 7-40z" transform="rotate(180)"/><path d="M-7-40L0-55 7-40z" transform="rotate(210)"/>
+        <path d="M-7-40L0-55 7-40z" transform="rotate(240)"/><path d="M-7-40L0-55 7-40z" transform="rotate(270)"/><path d="M-7-40L0-55 7-40z" transform="rotate(300)"/><path d="M-7-40L0-55 7-40z" transform="rotate(330)"/>
+      </g></g>
+      <circle cx="55" cy="55" r="32" fill="#F9C43C" stroke="#2B1A12" stroke-width="3"/>
+      <circle cx="45" cy="50" r="3" fill="#2B1A12"/><circle cx="65" cy="50" r="3" fill="#2B1A12"/><path d="M45 63c5 6 15 6 20 0" fill="none" stroke="#2B1A12" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+    <svg class="cloud" style="left:38%;top:60px;width:120px" viewBox="-25 -20 110 52" aria-hidden="true"><path d="M0 26c-16 0-22-20-5-24 2-15 26-18 33-4 12-8 31 0 28 14 11 2 11 14 0 14z" fill="#FFF4DC" stroke="#2B1A12" stroke-width="2.5"/></svg>
+    <svg class="cloud" style="right:6%;top:150px;width:90px;animation-duration:18s" viewBox="-25 -20 110 52" aria-hidden="true"><path d="M0 26c-16 0-22-20-5-24 2-15 26-18 33-4 12-8 31 0 28 14 11 2 11 14 0 14z" fill="#FFF4DC" stroke="#2B1A12" stroke-width="2.5"/></svg>
+    <svg class="hills" viewBox="0 0 1440 150" preserveAspectRatio="none" aria-hidden="true">
+      <path d="M0 70C220 10 420 40 640 70S1080 10 1440 50V150H0z" fill="#7FA65A" stroke="#2B1A12" stroke-width="3"/>
+      <path d="M0 110C260 70 520 90 760 110S1180 80 1440 100V150H0z" fill="#4E8440" stroke="#2B1A12" stroke-width="3"/>
+    </svg>
+
+    <div class="wrap">
+      <div>
+        <span class="badge">⚔️ Клиент на ядре Xray · навайбкожен с нуля</span>
+        <h1>Навайбкодил<br>ВПН</h1>
+        <p class="lead">Сказ о том, как Вайбатырь на медведе одолел Змея Блокирыча. Одна кнопка — и весь интернет Mac идёт через VLESS + Reality.</p>
+        <div class="cta">
+          <a class="btn" href="#download">🍏 Скачать для Mac</a>
+          <a class="btn paper" href="https://t.me/navaibevpn_bot?start=site" target="_blank" rel="noopener">🤖 Открыть бота</a>
+        </div>
+        <p class="mini">Бесплатно · без рекламы · проект из YouTube-видео</p>
+      </div>
+      <div>
+        <div class="window">
+          <div class="bar"><i style="background:#FF5F57"></i><i style="background:#FEBC2E"></i><i style="background:#28C840"></i><span>Навайбкодил ВПН</span></div>
+          <iframe src="demo/index.html" title="Живое демо клиента" loading="lazy"></iframe>
+        </div>
+        <p class="demo-note">👆 Это живое демо: жми «Подключить», меняй небо в настройках</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Преимущества -->
+  <section class="block" id="features">
+    <div class="wrap">
+      <span class="kicker">Преимущества</span>
+      <h2 class="title">Почему Змей проигрывает</h2>
+      <p class="intro">Внутри — проверенное ядро Xray. Снаружи — сказка, где подключение превращается в битву.</p>
+      <div class="features">
+        <div class="card reveal"><div class="ic">⚔️</div><h3>Одна кнопка</h3><p>Нажал «Подключить» — VPN включился сразу. Битва идёт параллельно и ничего не тормозит.</p></div>
+        <div class="card reveal"><div class="ic">🛡️</div><h3>VLESS + Reality</h3><p>Соединение выглядит как обычный заход на сайт. Без лишних портов и хитрых настроек.</p></div>
+        <div class="card reveal"><div class="ic">🧵</div><h3>Mux: одна нить</h3><p>Все запросы идут внутри одного соединения. Так провайдеру сложнее заметить пачку подключений.</p></div>
+        <div class="card reveal"><div class="ic">🌍</div><h3>Весь трафик Mac</h3><p>Режим TUN: через VPN идут все программы, а не только браузер.</p></div>
+        <div class="card reveal"><div class="ic">🏠</div><h3>РФ-сайты напрямую</h3><p>Банки и Госуслуги открываются без VPN. Или переключи на «Всё через VPN».</p></div>
+        <div class="card reveal"><div class="ic">📶</div><h3>Скорость вживую</h3><p>Загрузка, отдача, пинг и время подключения прямо на главном экране.</p></div>
+        <div class="card reveal"><div class="ic">🌙</div><h3>Темы неба</h3><p>День, закат, ночь со звёздами, зима со снегом или «по времени суток».</p></div>
+        <div class="card reveal"><div class="ic">🎵</div><h3>Звук и музыка</h3><p>Синтезированные эффекты битвы и музыка. Громкость настраивается отдельно.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- О клиенте -->
+  <section class="block alt" id="client">
+    <div class="wrap">
+      <span class="kicker">О клиенте</span>
+      <h2 class="title">Как он выглядит</h2>
+      <p class="intro">Свой интерфейс со своими героями: Вайбатырь, его медведь и Змей Блокирыч с замком на пузе.</p>
+      <div class="shots">
+        <div class="shot reveal"><img src="img/shot-day.png" alt="Главный экран днём" loading="lazy"><b>Змей сторожит</b><span>VPN выключен, замок на месте</span></div>
+        <div class="shot reveal"><img src="img/shot-night.png" alt="Подключено ночью" loading="lazy"><b>Змей повержен</b><span>Скорость и пинг вживую</span></div>
+        <div class="shot reveal"><img src="img/shot-winter.png" alt="Список серверов зимой" loading="lazy"><b>Терема</b><span>Серверы и их пинг</span></div>
+        <div class="shot reveal"><img src="img/shot-settings.png" alt="Настройки на закате" loading="lazy"><b>Настройки</b><span>Маршрут, небо, звук, кнопки</span></div>
+      </div>
+
+      <div class="flow reveal" aria-label="Как идёт трафик">
+        <div class="step"><div>💻</div><b>Твой Mac</b><small>все программы</small></div>
+        <div class="arrow">➜</div>
+        <div class="step"><div>⚙️</div><b>Ядро Xray</b><small>TUN ловит трафик</small></div>
+        <div class="arrow">➜</div>
+        <div class="step"><div>🧵</div><b>Mux</b><small>одна нить вместо пачки</small></div>
+        <div class="arrow">➜</div>
+        <div class="step"><div>🏰</div><b>Терем</b><small>сервер VLESS + Reality</small></div>
+        <div class="arrow">➜</div>
+        <div class="step"><div>🌍</div><b>Интернет</b><small>свободный</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Загрузка -->
+  <section class="block" id="download">
+    <div class="wrap">
+      <span class="kicker">Загрузка</span>
+      <h2 class="title">Где живёт клиент</h2>
+      <p class="intro">Сейчас готова версия для Mac. Остальные терема ещё строятся.</p>
+      <div class="platforms">
+        <div class="card mac reveal">
+          <h3>🍏 macOS</h3>
+          <div class="reqs"><span class="chip">Apple Silicon (M1–M4)</span><span class="chip">macOS 13+</span><span class="chip" id="ver">версия 1.0</span></div>
+          <a class="btn" id="dlmac" href="#download">⬇️ Скачать для Mac</a>
+          <ol>
+            <li>Открой скачанный архив и перетащи «Навайбкодил ВПН» в папку «Программы».</li>
+            <li>Приложение пока без подписи Apple, поэтому первый запуск такой: «Системные настройки» → «Конфиденциальность и безопасность» → «Всё равно открыть».</li>
+            <li>Возьми ключ в боте и вставь его в разделе «Грамота».</li>
+            <li>Выключи другие VPN и жми «Подключить». В первый раз Mac спросит пароль.</li>
+          </ol>
+        </div>
+        <div class="soon">
+          <div class="card reveal"><div>📱</div><b>iPhone</b><span>🔒 строится</span></div>
+          <div class="card reveal"><div>🤖</div><b>Android</b><span>🔒 строится</span></div>
+          <div class="card reveal"><div>🪟</div><b>Windows</b><span>🔒 строится</span></div>
+          <div class="card reveal"><div>📟</div><b>iPad</b><span>🔒 строится</span></div>
+          <div class="card reveal"><div>📺</div><b>Android TV</b><span>🔒 строится</span></div>
+          <div class="card reveal"><div>🐧</div><b>Linux</b><span>🔒 строится</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Тарифы -->
+  <section class="block alt" id="plans">
+    <div class="wrap">
+      <span class="kicker">Тарифы</span>
+      <h2 class="title">Казна</h2>
+      <p class="intro">Тарифы нарисованы для видео: оплаты нет, деньги нигде не списываются.</p>
+      <div class="plans">
+        <div class="card plan reveal"><h3>Месяц</h3><div class="price">149 ₽</div><span>за 1 месяц</span><ul><li>Все терема</li><li>Безлимит</li><li>Одна битва в день</li></ul><button class="btn paper" data-plan>Выбрать</button></div>
+        <div class="card plan best reveal"><h3>Год</h3><div class="price">1290 ₽</div><span>за 12 месяцев</span><ul><li>Все терема</li><li>Безлимит</li><li>Битвы без ограничений</li></ul><button class="btn red" data-plan>Выбрать</button></div>
+        <div class="card plan reveal"><h3>Квартал</h3><div class="price">399 ₽</div><span>за 3 месяца</span><ul><li>Все терема</li><li>Безлимит</li><li>Ночная тема</li></ul><button class="btn paper" data-plan>Выбрать</button></div>
+      </div>
+      <span class="demo-tag">ДЕМО: это заглушка для видео</span>
+    </div>
+  </section>
+
+  <!-- Отзывы -->
+  <section class="block" id="reviews">
+    <div class="wrap">
+      <span class="kicker">Отзывы</span>
+      <h2 class="title">Что говорят в Тридевятом царстве</h2>
+      <p class="intro">Отзывы сказочные, как и персонажи.</p>
+      <div class="reviews">
+        <div class="card review reveal"><div class="who"><div class="ava">🐉</div><div><b>Змей Блокирыч</b><span class="stars">★☆☆☆☆</span></div></div><p>Сторожил интернет триста лет. Пришёл какой-то в шлеме на медведе, сказал «щас завайбкодим» — и всё. Замок разбит, жалуюсь в спортлото.</p></div>
+        <div class="card review reveal"><div class="who"><div class="ava">🐻</div><div><b>Медведь Потапыч</b><span class="stars">★★★★★</span></div></div><p>Вожу Вайбатыря на каждую битву. Подключается быстро, лапы не устают. Ночная тема — моя любимая, звёзды как в берлоге.</p></div>
+        <div class="card review reveal"><div class="who"><div class="ava">🧔</div><div><b>Вайбатырь</b><span class="stars">★★★★★</span></div></div><p>Щит &lt;/&gt; держит любые 16 килобайт. Нажал одну кнопку — и интернет свободен. Рекомендую всем богатырям.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Вопросы -->
+  <section class="block alt" id="faq">
+    <div class="wrap">
+      <span class="kicker">Вопросы</span>
+      <h2 class="title">Наказ для любопытных</h2>
+      <div class="faq">
+        <details><summary>Что это вообще такое?</summary><p>Собственный клиент для Mac, сделанный с нуля для YouTube-видео: оболочка на Swift, внутри официальное ядро Xray-core. Подключается к нашему серверу VLESS + Reality.</p></details>
+        <details><summary>Это платно?</summary><p>Нет. Проект некоммерческий, тарифы на сайте и в боте — просто декорации для видео.</p></details>
+        <details><summary>Где взять ключ?</summary><p>В Telegram-боте @navaibevpn_bot. Сейчас бот работает в режиме показа для видео, и новые ключи могут не выдаваться.</p></details>
+        <details><summary>Почему macOS не даёт открыть приложение?</summary><p>У приложения нет платной подписи Apple. Открой «Системные настройки» → «Конфиденциальность и безопасность» и нажми «Всё равно открыть». Это нужно сделать один раз.</p></details>
+        <details><summary>Зачем приложение просит пароль Mac?</summary><p>Чтобы пустить через VPN весь трафик, нужно создать сетевой интерфейс и поменять маршруты. Это может только администратор. Пароль спрашивается один раз: приложение ставит маленького помощника, который умеет только включать и выключать VPN.</p></details>
+        <details><summary>Можно вместе с Happ или другим VPN?</summary><p>Нет: два VPN спорят за маршруты. Перед подключением выключи другой VPN, клиент сам подскажет, если что-то мешает.</p></details>
+        <details><summary>А для iPhone будет?</summary><p>Терем строится. Для iPhone нужно отдельное приложение и платный аккаунт разработчика Apple.</p></details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a class="logo" href="#top"><img src="img/icon.png" alt=""><b>Навайбкодил<br>ВПН</b></a>
+      <p style="margin-top:12px">Сказ о том, как Вайбатырь ключ добывал. Проект для YouTube-видео, не коммерческий сервис.</p>
+    </div>
+    <div>
+      <h4>Разделы</h4>
+      <a href="#features">Преимущества</a><a href="#client">О клиенте</a><a href="#download">Загрузка</a><a href="#faq">Вопросы</a>
+    </div>
+    <div>
+      <h4>Связь</h4>
+      <a href="https://t.me/navaibevpn_bot?start=site" target="_blank" rel="noopener">🤖 Telegram-бот</a>
+      <a href="https://github.com/XTLS/Xray-core" target="_blank" rel="noopener">⚙️ Ядро Xray-core</a>
+    </div>
+    <div class="legal">Ядро: Xray-core (MPL-2.0). Шрифты Ruslan Display и Neucha (OFL). Анимации: GSAP. Герои и рисунки — свои. Все отзывы на странице выдуманы и принадлежат сказочным персонажам.</div>
+  </div>
+</footer>
+
+<div id="toast" role="status"></div>
+
+<script>
+const $ = (s) => document.querySelector(s);
+function toast(t) { const el = $('#toast'); el.textContent = t; el.style.opacity = 1; clearTimeout(toast.t); toast.t = setTimeout(() => el.style.opacity = 0, 2800); }
+
+// Меню на телефоне
+$('#burger').onclick = () => { const open = $('#menu').classList.toggle('open'); $('#burger').setAttribute('aria-expanded', open); };
+document.querySelectorAll('#menu a').forEach(a => a.onclick = () => $('#menu').classList.remove('open'));
+
+// Ссылка на скачивание: сайт сам понимает, в каком репозитории GitHub он лежит
+const ASSET = 'NavaibeVPN-mac.zip';
+(function () {
+  const host = location.hostname;
+  if (!host.endsWith('.github.io')) {
+    $('#dlmac').onclick = (e) => { e.preventDefault(); toast('Ссылка заработает, когда сайт будет на GitHub Pages'); };
+    return;
+  }
+  const owner = host.split('.')[0];
+  const first = location.pathname.split('/').filter(Boolean)[0];
+  const repo = first && !first.includes('.') ? first : host;
+  $('#dlmac').href = `https://github.com/${owner}/${repo}/releases/latest/download/${ASSET}`;
+  fetch(`https://api.github.com/repos/${owner}/${repo}/releases/latest`).then(r => r.ok ? r.json() : null).then(rel => {
+    if (rel && rel.tag_name) $('#ver').textContent = 'версия ' + rel.tag_name.replace(/^v/, '');
+  }).catch(() => {});
+})();
+
+document.querySelectorAll('[data-plan]').forEach(b => b.onclick = () => toast('Это заглушка для видео: оплата не подключена 🙂'));
+
+// Плавное появление блоков
+const io = new IntersectionObserver((es) => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .12 });
+document.querySelectorAll('.reveal').forEach((el, i) => { el.style.transitionDelay = (i % 4) * 70 + 'ms'; io.observe(el); });
+</script>
+</body>
+</html>
