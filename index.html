@@ -140,6 +140,9 @@
   .calc-rows b { font-family:'Ruslan Display',serif; font-weight:400; }
   .calc-rows .total b { font-size:30px; color:var(--red); }
   .calc-joke { margin:12px 0 16px; font-size:17px; }
+  .tiers { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+  .tiers span { padding:3px 10px; border:2px solid var(--ink); border-radius:999px; background:var(--paper); font-size:15px; }
+  .tiers span.on { background:var(--red); color:var(--paper); }
   .calc .btn { width:100%; }
 
   /* Отзывы */
@@ -385,24 +388,26 @@
   <section class="block" id="partners">
     <div class="wrap">
       <span class="kicker">Партнёрство</span>
-      <h2 class="title">Приведи богатыря — забери 99%</h2>
-      <p class="intro">Самая щедрая партнёрка в Тридевятом царстве: <b>99% от каждой оплаты</b> твоих рефералов. Навсегда. Без условий. Почти без подвоха.</p>
+      <h2 class="title">Приведи богатыря — забери до 99%</h2>
+      <p class="intro">Самая щедрая партнёрка в Тридевятом царстве: <b>от 80% до 99% с каждой оплаты</b> твоих рефералов. Чем больше дружина — тем больше доля.</p>
       <div class="partner">
         <div class="steps3">
           <div class="card reveal"><div class="ic">🔗</div><h3>1. Получи ссылку</h3><p>Жми «Стать партнёром» — бот выдаст личную ссылку для друзей.</p></div>
           <div class="card reveal"><div class="ic">🐻</div><h3>2. Зови дружину</h3><p>Каждый, кто нажмёт «Запустить» по твоей ссылке, станет твоим рефералом.</p></div>
-          <div class="card reveal"><div class="ic">💰</div><h3>3. Забирай 99%</h3><p>С каждой оплаты реферала тебе — 99%. Нам — 1% на корм медведю.</p></div>
+          <div class="card reveal"><div class="ic">💰</div><h3>3. Забирай до 99%</h3><p>80% до 1 000 рефералов, 90% от 1 000, 99% от 10 000. Нам — остаток на корм медведю.</p></div>
         </div>
         <div class="card calc reveal">
           <h3>Калькулятор богатства</h3>
           <label for="friends">Сколько друзей приведёшь: <b id="fn">100</b></label>
-          <input type="range" id="friends" min="0" max="10000" step="10" value="100">
+          <input type="range" id="friends" min="0" max="15000" step="10" value="300">
+          <div class="tiers"><span>до 1 000 — 80%</span><span>1 000+ — 90%</span><span>10 000+ — 99%</span></div>
           <div class="calc-rows">
-            <div><span>Оплата одного друга</span><b>0 ₽</b></div>
-            <div><span>Твоя доля</span><b>99%</b></div>
+            <div><span>Оплата одного друга</span><b>149 ₽/мес</b></div>
+            <div><span>Твоя доля</span><b id="share">80%</b></div>
             <div class="total"><span>Твой доход в месяц</span><b id="income">0 ₽</b></div>
+            <div><span>За год</span><b id="income-year">0 ₽</b></div>
           </div>
-          <p class="calc-joke" id="joke">Оплат у нас нет, а 99% от нуля — тоже ноль. Зато честно!</p>
+          <p class="calc-joke" id="joke"></p>
           <a class="btn red" href="https://t.me/navaibevpn_bot?start=partner" target="_blank" rel="noopener">🤝 Стать партнёром</a>
         </div>
       </div>
@@ -505,20 +510,26 @@ document.querySelectorAll('#menu a').forEach(a => a.onclick = () => $('#menu').c
   }).catch(() => {});
 })();
 
-// Калькулятор партнёрки: 99% от нуля
-const JOKES = [
-  [0, 'Ноль друзей — ноль рублей. Математика сходится.'],
-  [100, 'Оплат у нас нет, а 99% от нуля — тоже ноль. Зато честно!'],
-  [1000, 'Тысяча богатырей! Доход всё ещё 0 ₽, но звучит солидно.'],
-  [5000, 'Змей Блокирыч уже завидует твоей дружине.'],
-  [10000, 'Десять тысяч рефералов и 0 ₽. Ты легенда партнёрки.'],
+// Калькулятор партнёрки: доля растёт с числом рефералов
+const PRICE = 149;   // месячный тариф одного реферала, ₽
+const TIERS = [      // [от скольких рефералов, доля партнёра, подпись]
+  [0, 0.80, 'Дружинник: 80% с каждой оплаты. Приведи 1 000 — станешь воеводой.'],
+  [1000, 0.90, 'Воевода: 90% с каждой оплаты. С 10 000 рефералов — 99%.'],
+  [10000, 0.99, 'Богатырь-легенда: 99% с каждой оплаты. Змей Блокирыч рыдает.'],
 ];
-$('#friends').addEventListener('input', (e) => {
-  const v = +e.target.value;
+const rub = (x) => Math.round(x).toLocaleString('ru-RU') + ' ₽';
+function calc() {
+  const v = +$('#friends').value;
+  const [, share, text] = TIERS.filter(([min]) => v >= min).pop();
   $('#fn').textContent = v.toLocaleString('ru-RU');
-  $('#income').textContent = '0 ₽';
-  $('#joke').textContent = JOKES.filter(([min]) => v >= min).pop()[1];
-});
+  $('#share').textContent = Math.round(share * 100) + '%';
+  $('#income').textContent = rub(v * PRICE * share);
+  $('#income-year').textContent = rub(v * PRICE * share * 12);
+  $('#joke').textContent = text;
+  document.querySelectorAll('.tiers span').forEach((el, i) => el.classList.toggle('on', TIERS[i][1] === share));
+}
+$('#friends').addEventListener('input', calc);
+calc();
 document.querySelectorAll('[data-plan]').forEach(b => b.onclick = () => toast('Это заглушка для видео: оплата не подключена 🙂'));
 
 // Плавное появление блоков
