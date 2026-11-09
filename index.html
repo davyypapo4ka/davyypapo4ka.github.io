@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Навайбкодил ВПН — сказочный клиент на ядре Xray</title>
-<meta name="description" content="Навайбкодил ВПН — клиент для Mac на ядре Xray: одна кнопка, VLESS + Reality, Mux, весь трафик через TUN и сказочный дизайн. Проект из YouTube-видео.">
+<meta name="description" content="Навайбкодил ВПН — клиент для Mac, Windows и Android на ядре Xray: одна кнопка, VLESS + Reality, Mux, весь трафик через TUN и сказочный дизайн. Проект из YouTube-видео.">
 <meta property="og:title" content="Навайбкодил ВПН">
 <meta property="og:description" content="Сказочный клиент на ядре Xray: Вайбатырь против Змея Блокирыча.">
 <meta property="og:image" content="img/shot-night.png">
@@ -108,6 +108,12 @@
   .soon .card b { display:block; font-family:'Ruslan Display',serif; font-weight:400; font-size:17px; margin:4px 0; }
   .soon .card span { font-size:16px; }
 
+  .platforms3 { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; align-items:start; }
+  .platforms3 .btn { width:100%; }
+  .platforms3 h3 { font-size:26px; }
+  .soon3 { grid-template-columns:repeat(4,1fr); margin-top:22px; }
+  #ver { font-size:16px; vertical-align:middle; }
+
   /* Тарифы */
   .plans { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; max-width:960px; margin:0 auto; }
   .plan { text-align:center; }
@@ -155,7 +161,8 @@
   @media (max-width: 980px) {
     .features { grid-template-columns:repeat(2,1fr); }
     .shots { grid-template-columns:repeat(2,1fr); }
-    .platforms { grid-template-columns:1fr; }
+    .platforms, .platforms3 { grid-template-columns:1fr; }
+    .soon3 { grid-template-columns:repeat(2,1fr); }
     .reviews { grid-template-columns:1fr; }
   }
   @media (max-width: 820px) {
@@ -226,12 +233,12 @@
       <div>
         <span class="badge">⚔️ Клиент на ядре Xray · навайбкожен с нуля</span>
         <h1>Навайбкодил<br>ВПН</h1>
-        <p class="lead">Сказ о том, как Вайбатырь на медведе одолел Змея Блокирыча. Одна кнопка — и весь интернет Mac идёт через VLESS + Reality.</p>
+        <p class="lead">Сказ о том, как Вайбатырь на медведе одолел Змея Блокирыча. Одна кнопка — и весь интернет идёт через VLESS + Reality. Для Mac, Windows и Android.</p>
         <div class="cta">
-          <a class="btn" href="#download">🍏 Скачать для Mac</a>
+          <a class="btn" id="herodl" href="#download">🍏 Скачать для Mac</a>
           <a class="btn paper" href="https://t.me/navaibevpn_bot?start=site" target="_blank" rel="noopener">🤖 Открыть бота</a>
         </div>
-        <p class="mini">Бесплатно · без рекламы · проект из YouTube-видео</p>
+        <p class="mini">🍏 Mac · 🪟 Windows · 🤖 Android · бесплатно · проект из YouTube-видео</p>
       </div>
       <div>
         <div class="window">
@@ -253,7 +260,7 @@
         <div class="card reveal"><div class="ic">⚔️</div><h3>Одна кнопка</h3><p>Нажал «Подключить» — VPN включился сразу. Битва идёт параллельно и ничего не тормозит.</p></div>
         <div class="card reveal"><div class="ic">🛡️</div><h3>VLESS + Reality</h3><p>Соединение выглядит как обычный заход на сайт. Без лишних портов и хитрых настроек.</p></div>
         <div class="card reveal"><div class="ic">🧵</div><h3>Mux: одна нить</h3><p>Все запросы идут внутри одного соединения. Так провайдеру сложнее заметить пачку подключений.</p></div>
-        <div class="card reveal"><div class="ic">🌍</div><h3>Весь трафик Mac</h3><p>Режим TUN: через VPN идут все программы, а не только браузер.</p></div>
+        <div class="card reveal"><div class="ic">🌍</div><h3>Весь трафик</h3><p>Режим TUN: через VPN идут все программы, а не только браузер. На Mac, Windows и Android.</p></div>
         <div class="card reveal"><div class="ic">🏠</div><h3>РФ-сайты напрямую</h3><p>Банки и Госуслуги открываются без VPN. Или переключи на «Всё через VPN».</p></div>
         <div class="card reveal"><div class="ic">📶</div><h3>Скорость вживую</h3><p>Загрузка, отдача, пинг и время подключения прямо на главном экране.</p></div>
         <div class="card reveal"><div class="ic">🌙</div><h3>Темы неба</h3><p>День, закат, ночь со звёздами, зима со снегом или «по времени суток».</p></div>
@@ -294,27 +301,47 @@
     <div class="wrap">
       <span class="kicker">Загрузка</span>
       <h2 class="title">Где живёт клиент</h2>
-      <p class="intro">Сейчас готова версия для Mac. Остальные терема ещё строятся.</p>
-      <div class="platforms">
-        <div class="card mac reveal">
+      <p class="intro">Один и тот же сказочный клиент на трёх платформах. <span class="chip" id="ver">версия 1.0</span></p>
+      <div class="platforms3">
+        <div class="card mac reveal" id="p-mac">
           <h3>🍏 macOS</h3>
-          <div class="reqs"><span class="chip">Apple Silicon (M1–M4)</span><span class="chip">macOS 13+</span><span class="chip" id="ver">версия 1.0</span></div>
-          <a class="btn" id="dlmac" href="#download">⬇️ Скачать для Mac</a>
+          <div class="reqs"><span class="chip">Apple Silicon (M1–M4)</span><span class="chip">macOS 13+</span><span class="chip">.dmg · 17 МБ</span></div>
+          <a class="btn dl" data-asset="NavaibeVPN-mac.dmg" href="#download">⬇️ Скачать для Mac</a>
           <ol>
-            <li>Открой скачанный архив и перетащи «Навайбкодил ВПН» в папку «Программы».</li>
-            <li>Приложение пока без подписи Apple, поэтому первый запуск такой: «Системные настройки» → «Конфиденциальность и безопасность» → «Всё равно открыть».</li>
-            <li>Возьми ключ в боте и вставь его в разделе «Грамота».</li>
-            <li>Выключи другие VPN и жми «Подключить». В первый раз Mac спросит пароль.</li>
+            <li>Открой .dmg и перетащи «Навайбкодил ВПН» на ярлык «Программы».</li>
+            <li>Запусти из «Программ». Mac скажет, что не может проверить приложение — нажми «Готово».</li>
+            <li>«Системные настройки» → «Конфиденциальность и безопасность» → внизу «Всё равно открыть» → пароль Mac. Это один раз: у приложения нет платной подписи Apple.</li>
+            <li>Вставь ключ из бота в «Грамоту», выключи другие VPN и жми «Подключить».</li>
           </ol>
         </div>
-        <div class="soon">
-          <div class="card reveal"><div>📱</div><b>iPhone</b><span>🔒 строится</span></div>
-          <div class="card reveal"><div>🤖</div><b>Android</b><span>🔒 строится</span></div>
-          <div class="card reveal"><div>🪟</div><b>Windows</b><span>🔒 строится</span></div>
-          <div class="card reveal"><div>📟</div><b>iPad</b><span>🔒 строится</span></div>
-          <div class="card reveal"><div>📺</div><b>Android TV</b><span>🔒 строится</span></div>
-          <div class="card reveal"><div>🐧</div><b>Linux</b><span>🔒 строится</span></div>
+        <div class="card mac reveal" id="p-win">
+          <h3>🪟 Windows</h3>
+          <div class="reqs"><span class="chip">Windows 10/11, 64 бит</span><span class="chip">установщик · 79 МБ</span></div>
+          <a class="btn dl" data-asset="NavaibeVPN-Setup.exe" href="#download">⬇️ Скачать для Windows</a>
+          <ol>
+            <li>Запусти NavaibeVPN-Setup.exe. Если Windows покажет синее окно «Система защитила ваш компьютер» — «Подробнее» → «Выполнить в любом случае».</li>
+            <li>Нажми «Далее» → «Установить». Ярлык появится на рабочем столе.</li>
+            <li>При запуске Windows спросит права администратора — нажми «Да»: без них весь трафик через VPN не пустить.</li>
+            <li>Вставь ключ из бота в «Грамоту», выключи другие VPN и жми «Подключить». Крестик сворачивает приложение в трей.</li>
+          </ol>
         </div>
+        <div class="card mac reveal" id="p-android">
+          <h3>🤖 Android</h3>
+          <div class="reqs"><span class="chip">Android 7+</span><span class="chip">.apk · 49 МБ</span></div>
+          <a class="btn dl" data-asset="NavaibeVPN.apk" href="#download">⬇️ Скачать для Android</a>
+          <ol>
+            <li>Скачай APK с телефона и открой его из уведомления или «Загрузок».</li>
+            <li>Если телефон попросит — разреши установку из этого источника (браузера или «Файлов»).</li>
+            <li>Если Play Защита предупредит о неизвестном приложении — «Подробнее» → «Всё равно установить».</li>
+            <li>Вставь ключ из бота в «Грамоту» и жми «Подключить». Android спросит разрешение на VPN — «ОК».</li>
+          </ol>
+        </div>
+      </div>
+      <div class="soon soon3">
+        <div class="card reveal"><div>📱</div><b>iPhone</b><span>🔒 строится</span></div>
+        <div class="card reveal"><div>📟</div><b>iPad</b><span>🔒 строится</span></div>
+        <div class="card reveal"><div>📺</div><b>Android TV</b><span>🔒 строится</span></div>
+        <div class="card reveal"><div>🐧</div><b>Linux</b><span>🔒 строится</span></div>
       </div>
     </div>
   </section>
@@ -354,10 +381,12 @@
       <span class="kicker">Вопросы</span>
       <h2 class="title">Наказ для любопытных</h2>
       <div class="faq">
-        <details><summary>Что это вообще такое?</summary><p>Собственный клиент для Mac, сделанный с нуля для YouTube-видео: оболочка на Swift, внутри официальное ядро Xray-core. Подключается к нашему серверу VLESS + Reality.</p></details>
+        <details><summary>Что это вообще такое?</summary><p>Собственный клиент, сделанный с нуля для YouTube-видео: на Mac оболочка на Swift, на Windows — на C#, на Android — на Kotlin, а внутри везде официальное ядро Xray-core. Подключается к нашему серверу VLESS + Reality.</p></details>
         <details><summary>Это платно?</summary><p>Нет. Проект некоммерческий, тарифы на сайте и в боте — просто декорации для видео.</p></details>
         <details><summary>Где взять ключ?</summary><p>В Telegram-боте @navaibevpn_bot. Сейчас бот работает в режиме показа для видео, и новые ключи могут не выдаваться.</p></details>
         <details><summary>Почему macOS не даёт открыть приложение?</summary><p>У приложения нет платной подписи Apple. Открой «Системные настройки» → «Конфиденциальность и безопасность» и нажми «Всё равно открыть». Это нужно сделать один раз.</p></details>
+        <details><summary>Windows пишет «Система защитила ваш компьютер»</summary><p>Так Windows встречает программы без платной цифровой подписи. Нажми «Подробнее» → «Выполнить в любом случае». Права администратора приложению нужны, чтобы создать сетевой адаптер VPN.</p></details>
+        <details><summary>Android не даёт установить APK</summary><p>Разреши установку из источника, откуда открываешь файл (браузер или «Файлы»), а на предупреждение Play Защиты нажми «Подробнее» → «Всё равно установить». Приложения нет в Google Play, поэтому так.</p></details>
         <details><summary>Зачем приложение просит пароль Mac?</summary><p>Чтобы пустить через VPN весь трафик, нужно создать сетевой интерфейс и поменять маршруты. Это может только администратор. Пароль спрашивается один раз: приложение ставит маленького помощника, который умеет только включать и выключать VPN.</p></details>
         <details><summary>Можно вместе с Happ или другим VPN?</summary><p>Нет: два VPN спорят за маршруты. Перед подключением выключи другой VPN, клиент сам подскажет, если что-то мешает.</p></details>
         <details><summary>А для iPhone будет?</summary><p>Терем строится. Для iPhone нужно отдельное приложение и платный аккаунт разработчика Apple.</p></details>
@@ -396,17 +425,32 @@ $('#burger').onclick = () => { const open = $('#menu').classList.toggle('open');
 document.querySelectorAll('#menu a').forEach(a => a.onclick = () => $('#menu').classList.remove('open'));
 
 // Ссылка на скачивание: сайт сам понимает, в каком репозитории GitHub он лежит
-const ASSET = 'NavaibeVPN-mac.zip';
+// Главная кнопка угадывает систему посетителя
+(function () {
+  const ua = navigator.userAgent;
+  const os = /Android/i.test(ua) ? 'android' : /iPhone|iPad|iPod/i.test(ua) ? 'ios' : /Windows/i.test(ua) ? 'win' : /Mac/i.test(ua) ? 'mac' : '';
+  const hero = $('#herodl');
+  if (os === 'win') hero.textContent = '🪟 Скачать для Windows';
+  if (os === 'android') hero.textContent = '🤖 Скачать для Android';
+  if (os === 'ios') hero.textContent = '📱 Для iPhone терем строится';
+  if (os && os !== 'ios') {
+    hero.href = '#p-' + os;
+    const card = $('#p-' + os);
+    if (card) { card.style.background = 'var(--gold)'; card.parentNode.prepend(card); }
+  }
+})();
+
 (function () {
   const host = location.hostname;
+  const btns = document.querySelectorAll('.dl');
   if (!host.endsWith('.github.io')) {
-    $('#dlmac').onclick = (e) => { e.preventDefault(); toast('Ссылка заработает, когда сайт будет на GitHub Pages'); };
+    btns.forEach(b => b.onclick = (e) => { e.preventDefault(); toast('Ссылка заработает, когда сайт будет на GitHub Pages'); });
     return;
   }
   const owner = host.split('.')[0];
   const first = location.pathname.split('/').filter(Boolean)[0];
   const repo = first && !first.includes('.') ? first : host;
-  $('#dlmac').href = `https://github.com/${owner}/${repo}/releases/latest/download/${ASSET}`;
+  btns.forEach(b => { b.href = `https://github.com/${owner}/${repo}/releases/latest/download/${b.dataset.asset}`; });
   fetch(`https://api.github.com/repos/${owner}/${repo}/releases/latest`).then(r => r.ok ? r.json() : null).then(rel => {
     if (rel && rel.tag_name) $('#ver').textContent = 'версия ' + rel.tag_name.replace(/^v/, '');
   }).catch(() => {});

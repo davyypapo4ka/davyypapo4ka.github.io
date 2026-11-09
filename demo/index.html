@@ -318,8 +318,8 @@
     <ol class="steps">
       <li>Возьми ключ в боте и вставь его в «Грамоту».</li>
       <li>Выключи другие VPN (например, Happ).</li>
-      <li>Жми «Подключить». В первый раз Mac спросит пароль — это чтобы пустить весь трафик через VPN.</li>
-      <li>Значок 🐉/🛡️ в строке меню тоже включает и выключает VPN.</li>
+      <li data-windows="Жми «Подключить». Приложение работает с правами администратора — так Windows разрешает пустить весь трафик через VPN." data-android="Жми «Подключить». В первый раз Android спросит разрешение на VPN — нажми «ОК».">Жми «Подключить». В первый раз Mac спросит пароль — это чтобы пустить весь трафик через VPN.</li>
+      <li data-windows="Значок в трее у часов тоже включает и выключает VPN. Крестик окна сворачивает приложение в трей." data-android="VPN работает в фоне: значок ключа в шторке уведомлений, выключить можно оттуда.">Значок 🐉/🛡️ в строке меню тоже включает и выключает VPN.</li>
     </ol>
     <div class="row"><button class="btn small red" id="bot3">🤖 Бот в Telegram</button></div>
   </section>
@@ -927,6 +927,8 @@ $('#change').addEventListener('click', () => { closeSheets(); gsap.delayedCall(.
 document.addEventListener('contextmenu', (e) => { if (e.target.tagName !== 'TEXTAREA') e.preventDefault(); });
 
 gsap.set('.sheet', { y: '130%', autoAlpha: 0 });
+// Тексты под платформу (Windows, Android); по умолчанию — Mac
+if (window.PLATFORM) $$('[data-' + window.PLATFORM + ']').forEach(el => { el.textContent = el.dataset[window.PLATFORM]; });
 applySettings();
 startIdle();
 render();
